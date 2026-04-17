@@ -1,92 +1,84 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TrainConsistManagementApp {
 
-    static class GoodsBogie {
+    static class Bogie {
         String type;
-        String cargo;
+        int capacity;
 
-        GoodsBogie(String type, String cargo) {
+        Bogie(String type, int capacity) {
             this.type = type;
-            this.cargo = cargo;
-        }
-
-        @Override
-        public String toString() {
-            return type + " -> " + cargo;
+            this.capacity = capacity;
         }
     }
 
     public static void main(String[] args) {
-        System.out.println("===========================================");
-        System.out.println(" UC12 Safety Compliance Check for Goods Bogies ");
-        System.out.println("===========================================\n");
+        System.out.println("-------------------------------------------");
+        System.out.println(" UC13 Performance Comparison (Loops vs Streams) ");
+        System.out.println("-------------------------------------------\n");
 
-        List<GoodsBogie> goodsBogies = new ArrayList<>();
-        goodsBogies.add(new GoodsBogie("Cylindrical", "Petroleum"));
-        goodsBogies.add(new GoodsBogie("Open", "Coal"));
-        goodsBogies.add(new GoodsBogie("Box", "Grain"));
-        goodsBogies.add(new GoodsBogie("Cylindrical", "Coal"));
-
-        System.out.println("Goods Bogies in Train:");
-        goodsBogies.forEach(System.out::println);
-
-        boolean isSafe = validateSafety(goodsBogies);
-
-        System.out.println("\nSafety Compliance Status: " + isSafe);
-        if (!isSafe) {
-            System.out.println("Train formation is NOT SAFE.");
-        } else {
-            System.out.println("Train formation is SAFE.");
+        List<Bogie> bogies = new ArrayList<>();
+        for (int i = 0; i < 10000; i++) {
+            bogies.add(new Bogie("Sleeper", i % 100));
         }
 
-        System.out.println("\nUC12 safety validation completed...");
-    }
+        long startLoop = System.nanoTime();
+        List<Bogie> loopResult = new ArrayList<>();
+        for (Bogie b : bogies) {
+            if (b.capacity > 60) {
+                loopResult.add(b);
+            }
+        }
+        long endLoop = System.nanoTime();
+        System.out.println("Loop Execution Time (ns): " + (endLoop - startLoop));
 
-    public static boolean validateSafety(List<GoodsBogie> bogies) {
-        return bogies.stream().allMatch(b ->
-                !(b.type.equalsIgnoreCase("Cylindrical") && !b.cargo.equalsIgnoreCase("Petroleum"))
-        );
-    }
+        long startStream = System.nanoTime();
+        List<Bogie> streamResult = bogies.stream()
+                .filter(b -> b.capacity > 60)
+                .collect(Collectors.toList());
+        long endStream = System.nanoTime();
+        System.out.println("Stream Execution Time (ns): " + (endStream - startStream));
 
-    @Test
-    void testSafety_AllBogiesValid() {
-        List<GoodsBogie> validBogies = List.of(
-                new GoodsBogie("Cylindrical", "Petroleum"),
-                new GoodsBogie("Open", "Coal")
-        );
-        assertTrue(validateSafety(validBogies));
-    }
-
-    @Test
-    void testSafety_CylindricalWithInvalidCargo() {
-        List<GoodsBogie> invalidBogies = List.of(new GoodsBogie("Cylindrical", "Coal"));
-        assertFalse(validateSafety(invalidBogies));
+        System.out.println("\nUC13 performance benchmarking completed...");
     }
 
     @Test
-    void testSafety_NonCylindricalBogiesAllowed() {
-        List<GoodsBogie> otherBogies = List.of(
-                new GoodsBogie("Open", "Coal"),
-                new GoodsBogie("Box", "Grain")
-        );
-        assertTrue(validateSafety(otherBogies));
+    void testLoopFilteringLogic() {
+        List<Bogie> testBogies = List.of(new Bogie("Sleeper", 70), new Bogie("AC", 50));
+        List<Bogie> result = new ArrayList<>();
+        for (Bogie b : testBogies) {
+            if (b.capacity > 60) result.add(b);
+        }
+        assertEquals(1, result.size());
     }
 
     @Test
-    void testSafety_MixedBogiesWithViolation() {
-        List<GoodsBogie> mixedBogies = List.of(
-                new GoodsBogie("Cylindrical", "Petroleum"),
-                new GoodsBogie("Cylindrical", "Coal")
-        );
-        assertFalse(validateSafety(mixedBogies));
+    void testStreamFilteringLogic() {
+        List<Bogie> testBogies = List.of(new Bogie("Sleeper", 70), new Bogie("AC", 50));
+        List<Bogie> result = testBogies.stream().filter(b -> b.capacity > 60).collect(Collectors.toList());
+        assertEquals(1, result.size());
     }
 
     @Test
-    void testSafety_EmptyBogieList() {
-        assertTrue(validateSafety(new ArrayList<>()));
+    void testLoopAndStreamResultsMatch() {
+        List<Bogie> testBogies = List.of(new Bogie("Sleeper", 70), new Bogie("AC", 80), new Bogie("General", 40));
+
+        List<Bogie> loopResult = new ArrayList<>();
+        for (Bogie b : testBogies) if (b.capacity > 60) loopResult.add(b);
+
+        List<Bogie> streamResult = testBogies.stream().filter(b -> b.capacity > 60).collect(Collectors.toList());
+
+        assertEquals(loopResult.size(), streamResult.size());
+    }
+
+    @Test
+    void testExecutionTimeMeasurement() {
+        long start = System.nanoTime();
+        long end = System.nanoTime();
+        assertTrue((end - start) >= 0);
     }
 }

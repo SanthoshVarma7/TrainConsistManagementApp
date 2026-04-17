@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -6,93 +5,65 @@ public class TrainConsistManagementApp {
 
     public static void main(String[] args) {
         System.out.println("-------------------------------------------");
-        System.out.println(" UC19 Binary Search for Bogie ID ");
+        System.out.println(" UC20 Exception Handling During Search ");
         System.out.println("-------------------------------------------\n");
 
-        String[] bogieIds = {"BG101", "BG205", "BG309", "BG412", "BG550"};
+        // Simulate an empty train scenario
+        String[] bogieIds = {};
+        String searchId = "BG101";
 
-        // Precondition: Data must be sorted for Binary Search
-        Arrays.sort(bogieIds);
-
-        String searchId = "BG309";
-
-        System.out.println("Sorted Bogie IDs:");
-        for (String id : bogieIds) {
-            System.out.println(id);
+        try {
+            boolean found = performSearch(bogieIds, searchId);
+            if (found) {
+                System.out.println("Bogie " + searchId + " found.");
+            } else {
+                System.out.println("Bogie " + searchId + " NOT found.");
+            }
+        } catch (IllegalStateException e) {
+            System.out.println("Error: " + e.getMessage());
         }
 
-        boolean found = binarySearch(bogieIds, searchId);
-
-        if (found) {
-            System.out.println("\nBogie " + searchId + " found using Binary Search.");
-        } else {
-            System.out.println("\nBogie " + searchId + " NOT found in train consist.");
-        }
-
-        System.out.println("\nUC19 search completed...");
+        System.out.println("\nUC20 execution completed...");
     }
 
-    public static boolean binarySearch(String[] arr, String target) {
-        // Ensure array is sorted if not already
-        Arrays.sort(arr);
+    public static boolean performSearch(String[] bogieIds, String searchId) {
+        // FAIL-FAST VALIDATION: Check system state before search [cite: 2168, 2169]
+        if (bogieIds == null || bogieIds.length == 0) {
+            throw new IllegalStateException("No bogies available in train. Cannot perform search."); // [cite: 2182, 2207]
+        }
 
-        int low = 0;
-        int high = arr.length - 1;
-
-        while (low <= high) {
-            int mid = low + (high - low) / 2;
-            int comparison = target.compareTo(arr[mid]);
-
-            if (comparison == 0) {
-                return true; // Found
-            } else if (comparison > 0) {
-                low = mid + 1; // Search right half
-            } else {
-                high = mid - 1; // Search left half
+        // SEARCH LOGIC: Executes only if data exists [cite: 2172]
+        for (String id : bogieIds) {
+            if (id.equals(searchId)) {
+                return true;
             }
         }
         return false;
     }
 
     @Test
-    void testBinarySearch_BogieFound() {
-        String[] bogieIds = {"BG101", "BG205", "BG309", "BG412", "BG550"};
-        assertTrue(binarySearch(bogieIds, "BG309"));
+    void testSearch_ThrowsExceptionWhenEmpty() {
+        String[] emptyBogies = {};
+        assertThrows(IllegalStateException.class, () -> {
+            performSearch(emptyBogies, "BG101");
+        }); // [cite: 2222]
     }
 
     @Test
-    void testBinarySearch_BogieNotFound() {
-        String[] bogieIds = {"BG101", "BG205", "BG309", "BG412", "BG550"};
-        assertFalse(binarySearch(bogieIds, "BG999"));
+    void testSearch_AllowsSearchWhenDataExists() {
+        String[] bogies = {"BG101", "BG205"};
+        assertDoesNotThrow(() -> performSearch(bogies, "BG101")); // [cite: 2225]
     }
 
     @Test
-    void testBinarySearch_FirstElementMatch() {
-        String[] bogieIds = {"BG101", "BG205", "BG309", "BG412", "BG550"};
-        assertTrue(binarySearch(bogieIds, "BG101"));
+    void testSearch_BogieFoundAfterValidation() {
+        String[] bogies = {"BG101", "BG205", "BG309"};
+        assertTrue(performSearch(bogies, "BG205")); // [cite: 2228]
     }
 
     @Test
-    void testBinarySearch_LastElementMatch() {
-        String[] bogieIds = {"BG101", "BG205", "BG309", "BG412", "BG550"};
-        assertTrue(binarySearch(bogieIds, "BG550"));
-    }
-
-    @Test
-    void testBinarySearch_SingleElementArray() {
-        String[] bogieIds = {"BG101"};
-        assertTrue(binarySearch(bogieIds, "BG101"));
-    }
-
-    @Test
-    void testBinarySearch_EmptyArray() {
-        String[] bogieIds = {};
-        assertFalse(binarySearch(bogieIds, "BG101"));
-    }
-
-    @Test
-    void testBinarySearch_UnsortedInputHandled() {
-        String[] bogieIds = {"BG309", "BG101", "BG550", "BG205", "BG412"};
-        assertTrue(binarySearch(bogieIds, "BG205"));
+    void testSearch_BogieNotFoundAfterValidation() {
+        String[] bogies = {"BG101", "BG205", "BG309"};
+        assertFalse(performSearch(bogies, "BG999")); // [cite: 2231]
     }
 }
